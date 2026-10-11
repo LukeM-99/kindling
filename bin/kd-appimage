@@ -1,0 +1,68 @@
+#!/bin/sh
+# kd-appimage: pick an AppImage from ~/Applications (override with KD_APPDIR) in rofi and run it.
+# Icons come from each AppImage's .DirIcon, extracted once into ~/.cache/kindling/appicons.
+# Cached as .png even when SVG: rofi only loads paths with an image suffix, then sniffs the content.
+# `kd-appimage icons` (autostart) gives AppImage windows that set no icon (Electron ones, e.g.
+# Vesktop) that same icon, so tint2 doesn't show Openbox's generic one.
+dir=${KD_APPDIR:-$HOME/Applications}
+icons=${XDG_CACHE_HOME:-$HOME/.cache}/kindling/appicons
+mkdir -p "$icons"
+
+# .DirIcon is often a symlink to the real file inside the image, so follow it a few hops.
+extract_icon() (
+  tmp=$(mktemp -d) && cd "$tmp" || exit
+  p=.DirIcon
+  for _ in 1 2 3; do
+    timeout 10 "$1" --appimage-extract "$p" >/dev/null 2>&1
+    [ -L "squashfs-root/$p" ] || break
+    p=$(dirname "$p")/$(readlink "squashfs-root/$p"); p=${p#./}
+  done
+  [ -f "squashfs-root/$p" ] && [ ! -L "squashfs-root/$p" ] && cp "squashfs-root/$p" "$2"
+  touch "$2"   # empty file = no icon; don't try again
+  rm -rf "$tmp"
+)
+
+# set_icon WINDOW IMAGE: write IMAGE as the window's 48px _NET_WM_ICON (ARGB cardinals; xprop -set
+# stops at 64 values, so Perl's X11::Protocol does the write). SVGs go through rsvg-convert:
+# ImageMagick's own SVG reader can't draw embedded images (LÖVE's icon is one).
+set_icon() {
+  case $(head -c 512 "$2") in *'<svg'*) rsvg-convert -w 48 -h 48 -a "$2" ;; *) cat "$2" ;; esac |
+  convert - -resize 48x48 -background none -gravity center -extent 48x48 -depth 8 rgba:- |
+  perl -MX11::Protocol -e '
+    my $X = X11::Protocol->new; local $/; my @p = unpack "C*", <STDIN>; my @c;
+    push @c, $p[$_+3] << 24 | $p[$_] << 16 | $p[$_+1] << 8 | $p[$_+2] for grep { $_ % 4 == 0 } 0 .. $#p;
+    $X->ChangeProperty($ARGV[0], $X->atom("_NET_WM_ICON"), $X->atom("CARDINAL"), 32, "Replace", pack "L*", 48, 48, @c);
+    $X->GetInputFocus;' "$(($1))"   # xprop gives hex ids; Perl wants a number
+}
+
+# icons: on every change to the window list, look at the new windows. A window belongs to an
+# AppImage when its process has APPIMAGE set (LÖVE: its mount is gone once the runtime exits), or
+# runs from that AppImage's FUSE mount, type fuse.<file>.AppImage (Vesktop clears APPIMAGE).
+if [ "$1" = icons ]; then
+  old=
+  xprop -root -spy _NET_CLIENT_LIST | while read -r line; do
+    new=$(echo "${line#*#}" | tr -d ,)
+    for w in $new; do
+      case " $old " in *" $w "*) continue ;; esac
+      pid=$(xprop -id "$w" _NET_WM_PID 2>/dev/null | awk '{ print $3 }')
+      img=$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | sed -n 's|^APPIMAGE=.*/||p')
+      [ -n "$img" ] || img=$(awk -v e="$(readlink "/proc/$pid/exe" 2>/dev/null)" '
+        $3 ~ /^fuse\..*\.[Aa]pp[Ii]mage$/ && index(e, $2 "/") == 1 { print substr($3, 6) }' /proc/mounts)
+      [ -n "$img" ] || continue
+      name=${img%.*}
+      [ -e "$icons/$name.png" ] || [ ! -f "$dir/$img" ] || extract_icon "$dir/$img" "$icons/$name.png"
+      [ -s "$icons/$name.png" ] && set_icon "$w" "$icons/$name.png"
+    done
+    old=$new
+  done
+  exit
+fi
+
+pick=$(for f in "$dir"/*.[Aa]pp[Ii]mage; do
+  [ -e "$f" ] || continue
+  [ -x "$f" ] || chmod +x "$f"
+  name=${f##*/}; name=${name%.*}
+  [ -e "$icons/$name.png" ] || extract_icon "$f" "$icons/$name.png"
+  printf '%s\0icon\037%s\n' "$name" "$icons/$name.png"
+done | rofi -dmenu -i -p appimage -show-icons) || exit
+cd && exec "$(ls -d "$dir/$pick".[Aa]pp[Ii]mage | head -1)"

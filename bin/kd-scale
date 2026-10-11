@@ -1,0 +1,30 @@
+#!/bin/sh
+# kd-scale [up|down|reset]: UI scale for the current screen layout, 100-200% in 25% steps.
+# Remembered per layout (the set of lit outputs) in ~/.config/kindling/scale. Default: 150% when the
+# laptop panel is the only screen, 100% otherwise. With no argument, just applies the remembered one
+# (kd-display runs it after every layout change). Applying sets Xft.dpi and XSETTINGS (GTK apps
+# rescale live, others when restarted) and re-renders kindling's own configs via kd-theme.
+conf=${XDG_CONFIG_HOME:-$HOME/.config}/kindling/scale
+cur=${XDG_CACHE_HOME:-$HOME/.cache}/kindling/scale
+mkdir -p "${conf%/*}" "${cur%/*}" && touch "$conf"
+
+# lit outputs from --current: --listmonitors re-probes every connector (over a second here)
+layout=$(xrandr --current | awk '/ connected / && / [0-9]+x[0-9]+\+[0-9]+\+[0-9]+ / { print $1 }' | sort | paste -sd+)
+echo "$layout" | grep -Eqx '(eDP|LVDS)[^+]*' && def=150 || def=100
+s=$(awk -v l="$layout" '$1 == l { print $2 }' "$conf"); s=${s:-$def}
+
+case $1 in
+up) s=$((s + 25)) ;;
+down) s=$((s - 25)) ;;
+reset) s=$def ;;
+esac
+[ "$s" -gt 200 ] && s=200
+[ "$s" -lt 100 ] && s=100
+
+{ grep -v "^$layout " "$conf"; [ "$s" = "$def" ] || echo "$layout $s"; } > "$conf.new" && mv "$conf.new" "$conf"
+if [ "$s" != "$(cat "$cur" 2>/dev/null)" ]; then
+  echo "$s" > "$cur"
+  kd-theme
+fi
+[ -n "$1" ] && { notify-send -t 1200 -c osd -h string:x-dunst-stack-tag:osd -h int:value:$((s - 100)) scale "$s%" & }   # dunst may be restarting; don't wait
+true

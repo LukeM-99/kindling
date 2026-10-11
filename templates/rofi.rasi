@@ -1,0 +1,22 @@
+configuration {
+  modi: "drun,run,window";
+  show-icons: true;
+  font: "Noto Sans {{s 11}}";
+  drun-display-format: "{name}";
+  display-drun: "apps";
+}
+
+@import "~/.cache/kindling/colors.rasi"
+
+* { background-color: transparent; text-color: @fg; }
+window { location: north; y-offset: {{s 56}}px; width: {{s 560}}px; padding: {{s 12}}px; background-color: @bg; border: 2px; border-color: @bg3; border-radius: 1px; }
+mainbox { spacing: {{s 10}}px; children: [inputbar, listview]; }
+inputbar { padding: {{s 10}}px {{s 14}}px; spacing: {{s 10}}px; background-color: @bg2; border-radius: 1px; children: [prompt, entry]; }
+prompt { text-color: @accent; }
+entry { placeholder: "search"; placeholder-color: @fg2; }
+listview { border: 0; lines: 8; fixed-height: false; scrollbar: false; spacing: {{s 4}}px; }
+element { padding: {{s 8}}px {{s 12}}px; spacing: {{s 10}}px; border-radius: 1px; }
+element normal.normal, element alternate.normal, element normal.active, element alternate.active { background-color: transparent; text-color: @fg; }
+element selected.normal, element selected.active { background-color: @accent; text-color: @bg; }
+element-icon { size: 1.3em; }
+element-text { text-color: inherit; vertical-align: 0.5; }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_menu xmlns="http://openbox.org/3.4/menu">
+  <menu id="root-menu" label="kindling">
+    <item label="Terminal"><action name="Execute"><command>urxvt</command></action></item>
+    <item label="Apps"><action name="Execute"><command>rofi -show drun</command></action></item>
+    <item label="AppImages"><action name="Execute"><command>kd-appimage</command></action></item>
+    <item label="Wallpaper"><action name="Execute"><command>kd-wallpaper</command></action></item>
+    <item label="Displays"><action name="Execute"><command>arandr</command></action></item>
+    <item label="Audio"><action name="Execute"><command>kd-audio menu</command></action></item>
+    <item label="Keybinds"><action name="Execute"><command>kd-keys</command></action></item>
+    <separator/>
+    <item label="Reload"><action name="Reconfigure"/></item>
+    <item label="Power"><action name="Execute"><command>kd-power</command></action></item>
+  </menu>
+</openbox_menu>

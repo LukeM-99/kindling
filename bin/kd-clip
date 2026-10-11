@@ -1,0 +1,22 @@
+#!/bin/sh
+# kd-clip [daemon]: clipboard history. `daemon` polls the clipboard once a second
+# (Devuan has no clipnotify/clipmenu); no argument picks an entry in rofi.
+dir=${XDG_CACHE_HOME:-$HOME/.cache}/kindling/clips
+mkdir -p "$dir" && cd "$dir" || exit
+
+if [ "$1" = daemon ]; then
+  last=
+  while sleep 1; do
+    now=$(xclip -sel clip -o 2>/dev/null) || continue
+    [ -n "$now" ] && [ "$now" != "$last" ] || continue
+    last=$now
+    # named by content hash: copying something again just bumps it to the top
+    printf '%s' "$now" > "$(printf '%s' "$now" | md5sum | cut -c1-16)"
+    ls -t | tail -n +51 | xargs -r rm --
+  done
+fi
+
+set -- $(ls -t)
+i=$(for f; do head -c 80 "$f" | tr '\n\t' '  '; echo; done | rofi -dmenu -i -p clip -format i) || exit
+shift "$i"
+xclip -sel clip < "$1"

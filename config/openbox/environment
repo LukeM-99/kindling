@@ -1,0 +1,2 @@
+# sourced by openbox-session before openbox starts, so keybinds can find the kd-* scripts
+export PATH="$HOME/.local/bin:$PATH"

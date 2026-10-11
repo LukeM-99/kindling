@@ -1,0 +1,12 @@
+kd-display  # fit screens to what is plugged in (arandr layout: ~/.screenlayout/default.sh)
+kd-theme
+xsettingsd -c ~/.cache/kindling/xsettingsd &  # live DPI for GTK apps
+tint2 -c ~/.cache/kindling/tint2rc &
+picom -b --experimental-backends
+dunst &
+kd-clip daemon &
+kd-display watch &
+kd-appimage icons &
+xss-lock -l -- kd-lock &  # -l: suspend waits until the lock is up
+nm-applet &       # wifi tray; the kindling session skips /etc/xdg/autostart
+blueman-applet &  # bluetooth tray

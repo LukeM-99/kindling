@@ -1,0 +1,40 @@
+#!/bin/sh
+# kd-jack [start|stop|status|patch]: JACK on demand, next to PulseAudio.
+# start: jackd on an ALSA card (pulse hands the card over via device reservation),
+#        then pulse is bridged in so desktop audio keeps playing through JACK.
+# patch: rofi patchbay; pick a connection to break it, or "+ connect" to make one.
+# No argument toggles. Card/rate/period: KD_JACK_DEV, KD_JACK_RATE, KD_JACK_PERIOD.
+export JACK_NO_START_SERVER=1
+log=${XDG_CACHE_HOME:-$HOME/.cache}/kindling/jackd.log
+running() { pgrep -x jackd >/dev/null; }
+ports() { jack_lsp -p | awk -v t="$1" '/^\t/ { if ($0 ~ t) print p; next } { p = $0 }'; }
+
+case ${1:-toggle} in
+toggle) if running; then exec "$0" stop; else exec "$0" start; fi ;;
+start)
+  running && exit
+  dev=${KD_JACK_DEV:-hw:$(sed -n 's/^ *[0-9]* \[\([^ ]*\) *\].*/\1/p' /proc/asound/cards | rofi -dmenu -auto-select -p 'jack card')} || exit
+  jackd -d alsa -d "$dev" -r "${KD_JACK_RATE:-48000}" -p "${KD_JACK_PERIOD:-256}" -n 2 >"$log" 2>&1 &
+  jack_wait -w -t 5 >/dev/null || { notify-send -u critical JACK "failed to start on $dev, see $log"; exit 1; }
+  pactl load-module module-jack-sink channels=2 >/dev/null
+  pactl load-module module-jack-source channels=2 >/dev/null
+  pactl set-default-sink jack_out
+  notify-send JACK "running on $dev" ;;
+stop)
+  pactl unload-module module-jack-sink
+  pactl unload-module module-jack-source
+  pkill -x jackd
+  notify-send JACK stopped ;;
+status) running && echo "● jack" || echo "○ jack" ;;
+patch)
+  running || { notify-send JACK "not running"; exit 1; }
+  pick=$({ echo "+ connect"; jack_lsp -c -p | awk '
+    /^   / { c[n++] = substr($0, 4); next }
+    /^\t/ { if (/output/) for (i = 0; i < n; i++) print p " → " c[i]; next }
+    { p = $0; n = 0 }'; } | rofi -dmenu -i -p patch) || exit
+  if [ "$pick" = "+ connect" ]; then
+    out=$(ports output | rofi -dmenu -i -p from) && in=$(ports input | rofi -dmenu -i -p to) && jack_connect "$out" "$in"
+  else
+    jack_disconnect "${pick% → *}" "${pick#* → }"
+  fi ;;
+esac

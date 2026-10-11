@@ -1,0 +1,27 @@
+#!/bin/sh
+# kd-lock: xsecurelock in the theme's colours and font, with a live clock and user@host.
+# Stays in the foreground (xss-lock needs that). The first keypress only wakes the prompt
+# (xsecurelock's default, so you never type a password into a blank, maybe-off screen).
+# Text size follows Xft.dpi, so kd-scale covers it.
+. "${XDG_CACHE_HOME:-$HOME/.cache}/kindling/colors"
+
+# Run by xsecurelock as the saver (it sets XSCREENSAVER_WINDOW, one per monitor): fill the
+# window with the theme background instead of saver_blank's black. The colour is the window's
+# own background, so Perl can exit; a sleep (~1 MB, not Perl's ~11) stands in until we're killed.
+if [ -n "$XSCREENSAVER_WINDOW" ]; then
+  perl -MX11::Protocol -e '
+    my $X = X11::Protocol->new; my $w = $ARGV[0] =~ /^0x/ ? hex $ARGV[0] : $ARGV[0];
+    $X->ChangeWindowAttributes($w, background_pixel => hex $ARGV[1]);
+    $X->ClearArea($w, 0, 0, 0, 0, 0); $X->GetInputFocus;' "$XSCREENSAVER_WINDOW" "${bg#\#}"
+  exec sleep infinity
+fi
+
+export XSECURELOCK_SAVER="$(readlink -f "$0")" \
+  XSECURELOCK_FONT="Noto Sans:size=12" \
+  XSECURELOCK_AUTH_BACKGROUND_COLOR="$bg" \
+  XSECURELOCK_AUTH_FOREGROUND_COLOR="$accent" \
+  XSECURELOCK_AUTH_WARNING_COLOR="$urgent" \
+  XSECURELOCK_SHOW_DATETIME=1 XSECURELOCK_DATETIME_FORMAT="%a %d %b  %H:%M" \
+  XSECURELOCK_SHOW_USERNAME=1 XSECURELOCK_SHOW_HOSTNAME=1 \
+  XSECURELOCK_PASSWORD_PROMPT=asterisks
+exec xsecurelock

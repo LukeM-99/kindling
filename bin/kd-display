@@ -1,0 +1,44 @@
+#!/bin/sh
+# kd-display [watch]: fit the screen layout to what's plugged in and whether the lid is open.
+# External screens connected: use the arandr layout in ~/.screenlayout/default.sh if every
+# screen it turns on is present, else line them up left to right. Laptop panel only: turn it
+# on and everything else off. The panel goes off whenever the lid is closed.
+# watch: re-run whenever a screen is plugged/unplugged or the lid opens/closes.
+layout=$HOME/.screenlayout/default.sh
+
+state() { cat /sys/class/drm/card*-*/status /proc/acpi/button/lid/*/state 2>/dev/null; }
+
+if [ "$1" = watch ]; then
+  last=$(state)
+  while sleep 2; do
+    now=$(state)
+    [ "$now" = "$last" ] && continue
+    sleep 1; last=$(state); "$0"   # let the connector settle before probing
+  done
+fi
+
+connected=$(xrandr --query | awk '$2 == "connected" { print $1 }')
+panel=$(echo "$connected" | grep -E '^(eDP|LVDS)' | head -1)
+external=$(echo "$connected" | grep -vxF "${panel:-none}")
+grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null && lid=closed
+
+if [ -z "$external" ]; then
+  xrandr --auto --output "$panel" --auto --primary
+elif [ -x "$layout" ] && [ -z "$(grep -o -- '--output [^ ]* --[a-z]*' "$layout" |
+    awk '$3 != "--off" { print $2 }' | grep -vxF "$connected")" ]; then
+  "$layout"
+else
+  set -- --auto
+  prev=
+  [ -n "$panel" ] && if [ "$lid" = closed ]; then set -- "$@" --output "$panel" --off
+    else set -- "$@" --output "$panel" --auto; prev=$panel; fi
+  for o in $external; do
+    set -- "$@" --output "$o" --auto ${prev:+--right-of "$prev"}
+    prev=$o
+  done
+  xrandr "$@"
+fi
+
+wall=$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/kindling/wallpaper" 2>/dev/null) &&
+  feh --no-fehbg --bg-fill "$wall"
+kd-scale   # each layout keeps its own UI scale

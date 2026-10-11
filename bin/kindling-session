@@ -1,0 +1,7 @@
+#!/bin/sh
+# kindling-session: openbox-session without the XDG autostart pass, which would also start every
+# daemon other installed desktops put in /etc/xdg/autostart (KDE Connect, KWallet, calendar,
+# print applet...). Only ~/.config/openbox/autostart runs.
+cfg=${XDG_CONFIG_HOME:-$HOME/.config}
+for a in /etc/xdg/openbox/environment "$cfg/openbox/environment"; do [ -r "$a" ] && . "$a"; done
+exec openbox --startup "sh $cfg/openbox/autostart"

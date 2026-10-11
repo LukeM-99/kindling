@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Keybind comments are what kd-keys shows: keep them on the same line as <keybind>. -->
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+  <resistance><strength>10</strength><screen_edge_strength>20</screen_edge_strength></resistance>
+  <focus><focusNew>yes</focusNew><followMouse>no</followMouse></focus>
+  <placement><policy>Smart</policy><center>yes</center><monitor>Mouse</monitor></placement>
+  <resize><drawContents>no</drawContents></resize>
+  <!-- top = tint2 margin 8 + height 36 + gap 8: openbox uses the larger of margin and strut, not the sum -->
+  <margins><top>{{s 52}}</top><bottom>{{s 8}}</bottom><left>{{s 8}}</left><right>{{s 8}}</right></margins>
+
+  <theme>
+    <name>kindling</name>
+    <titleLayout>LIMC</titleLayout>
+    <keepBorder>yes</keepBorder>
+    <animateIconify>no</animateIconify>
+    <font place="ActiveWindow"><name>Noto Sans</name><size>{{s 9}}</size><weight>Bold</weight></font>
+    <font place="InactiveWindow"><name>Noto Sans</name><size>{{s 9}}</size><weight>Normal</weight></font>
+    <font place="MenuHeader"><name>Noto Sans</name><size>{{s 9}}</size><weight>Bold</weight></font>
+    <font place="MenuItem"><name>Noto Sans</name><size>{{s 9}}</size><weight>Normal</weight></font>
+    <font place="ActiveOnScreenDisplay"><name>Noto Sans</name><size>{{s 10}}</size><weight>Bold</weight></font>
+    <font place="InactiveOnScreenDisplay"><name>Noto Sans</name><size>{{s 10}}</size><weight>Normal</weight></font>
+  </theme>
+
+  <desktops>
+    <number>4</number>
+    <names><name>1</name><name>2</name><name>3</name><name>4</name></names>
+    <popupTime>0</popupTime>
+  </desktops>
+
+  <menu><file>menu.xml</file><showIcons>no</showIcons></menu>
+
+  <keyboard>
+    <keybind key="W-Return"><!-- Terminal --><action name="Execute"><command>urxvt</command></action></keybind>
+    <keybind key="W-space"><!-- App launcher --><action name="Execute"><command>rofi -show drun</command></action></keybind>
+    <keybind key="W-S-space"><!-- AppImages (~/Applications) --><action name="Execute"><command>kd-appimage</command></action></keybind>
+    <keybind key="W-e"><!-- File manager --><action name="Execute"><command>pcmanfm</command></action></keybind>
+    <keybind key="W-w"><!-- Window switcher --><action name="Execute"><command>rofi -show window</command></action></keybind>
+    <keybind key="W-Tab"><!-- Window switcher --><action name="Execute"><command>rofi -show window</command></action></keybind>
+    <keybind key="W-v"><!-- Clipboard history --><action name="Execute"><command>kd-clip</command></action></keybind>
+    <keybind key="W-slash"><!-- Keybind cheat sheet --><action name="Execute"><command>kd-keys</command></action></keybind>
+    <keybind key="C-A-w"><!-- Wallpaper + theme picker --><action name="Execute"><command>kd-wallpaper</command></action></keybind>
+    <keybind key="W-Escape"><!-- Power menu --><action name="Execute"><command>kd-power</command></action></keybind>
+    <keybind key="W-BackSpace"><!-- Lock screen --><action name="Execute"><command>kd-lock</command></action></keybind>
+    <keybind key="W-equal"><!-- UI scale up (this screen layout) --><action name="Execute"><command>kd-scale up</command></action></keybind>
+    <keybind key="W-minus"><!-- UI scale down --><action name="Execute"><command>kd-scale down</command></action></keybind>
+    <keybind key="W-0"><!-- UI scale reset --><action name="Execute"><command>kd-scale reset</command></action></keybind>
+    <keybind key="W-g"><!-- Toggle compositor (lite mode) --><action name="Execute"><command>sh -c 'pkill -x picom || picom -b --experimental-backends'</command></action></keybind>
+
+    <keybind key="Print"><!-- Screenshot: area --><action name="Execute"><command>kd-shot area</command></action></keybind>
+    <keybind key="W-S-s"><!-- Screenshot: area --><action name="Execute"><command>kd-shot area</command></action></keybind>
+    <keybind key="S-Print"><!-- Screenshot: full screen --><action name="Execute"><command>kd-shot</command></action></keybind>
+    <keybind key="W-Print"><!-- Screenshot: window --><action name="Execute"><command>kd-shot window</command></action></keybind>
+    <keybind key="C-Print"><!-- Screenshot: 3s delay --><action name="Execute"><command>kd-shot delay</command></action></keybind>
+
+    <keybind key="W-q"><!-- Close window --><action name="Close"/></keybind>
+    <keybind key="W-f"><!-- Maximize --><action name="ToggleMaximize"/></keybind>
+    <keybind key="W-S-f"><!-- Fullscreen --><action name="ToggleFullscreen"/></keybind>
+    <keybind key="W-n"><!-- Minimize --><action name="Iconify"/></keybind>
+    <keybind key="W-c"><!-- Centre window --><action name="Unmaximize"/><action name="MoveResizeTo"><x>center</x><y>center</y><width>60%</width><height>70%</height></action></keybind>
+    <keybind key="A-Tab"><!-- Cycle windows --><action name="NextWindow"><finalactions><action name="Focus"/><action name="Raise"/><action name="Unshade"/></finalactions></action></keybind>
+    <keybind key="W-i"><!-- Snap top half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>100%</width><height>50%</height></action></keybind>
+    <keybind key="W-Up"><!-- Snap top half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>100%</width><height>50%</height></action></keybind>
+    <keybind key="W-j"><!-- Snap left half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
+    <keybind key="W-Left"><!-- Snap left half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
+    <keybind key="W-k"><!-- Snap bottom half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>-0</y><width>100%</width><height>50%</height></action></keybind>
+    <keybind key="W-Down"><!-- Snap bottom half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>-0</y><width>100%</width><height>50%</height></action></keybind>
+    <keybind key="W-l"><!-- Snap right half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
+    <keybind key="W-Right"><!-- Snap right half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
+    <keybind key="W-u"><!-- Snap top-left quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>50%</width><height>50%</height></action></keybind>
+    <keybind key="W-o"><!-- Snap top-right quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>0</y><width>50%</width><height>50%</height></action></keybind>
+    <keybind key="W-m"><!-- Snap bottom-left quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>-0</y><width>50%</width><height>50%</height></action></keybind>
+    <keybind key="W-period"><!-- Snap bottom-right quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>-0</y><width>50%</width><height>50%</height></action></keybind>
+    <keybind key="W-S-i"><!-- Move window up --><action name="MoveRelative"><x>0</x><y>-40</y></action></keybind>
+    <keybind key="W-S-j"><!-- Move window left --><action name="MoveRelative"><x>-40</x><y>0</y></action></keybind>
+    <keybind key="W-S-k"><!-- Move window down --><action name="MoveRelative"><x>0</x><y>40</y></action></keybind>
+    <keybind key="W-S-l"><!-- Move window right --><action name="MoveRelative"><x>40</x><y>0</y></action></keybind>
+    <keybind key="W-C-i"><!-- Resize: shorter --><action name="ResizeRelative"><bottom>-40</bottom></action></keybind>
+    <keybind key="W-C-k"><!-- Resize: taller --><action name="ResizeRelative"><bottom>40</bottom></action></keybind>
+    <keybind key="W-C-j"><!-- Resize: narrower --><action name="ResizeRelative"><right>-40</right></action></keybind>
+    <keybind key="W-C-l"><!-- Resize: wider --><action name="ResizeRelative"><right>40</right></action></keybind>
+    <keybind key="W-S-r"><!-- Reload Openbox --><action name="Reconfigure"/></keybind>
+
+    <keybind key="W-bracketleft"><!-- Previous desktop --><action name="GoToDesktop"><to>left</to><wrap>no</wrap></action></keybind>
+    <keybind key="W-bracketright"><!-- Next desktop --><action name="GoToDesktop"><to>right</to><wrap>no</wrap></action></keybind>
+    <keybind key="W-1"><!-- Desktop 1 --><action name="GoToDesktop"><to>1</to></action></keybind>
+    <keybind key="W-2"><!-- Desktop 2 --><action name="GoToDesktop"><to>2</to></action></keybind>
+    <keybind key="W-3"><!-- Desktop 3 --><action name="GoToDesktop"><to>3</to></action></keybind>
+    <keybind key="W-4"><!-- Desktop 4 --><action name="GoToDesktop"><to>4</to></action></keybind>
+    <keybind key="W-S-1"><!-- Send window to desktop 1 --><action name="SendToDesktop"><to>1</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-2"><!-- Send window to desktop 2 --><action name="SendToDesktop"><to>2</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-3"><!-- Send window to desktop 3 --><action name="SendToDesktop"><to>3</to><follow>no</follow></action></keybind>
+    <keybind key="W-S-4"><!-- Send window to desktop 4 --><action name="SendToDesktop"><to>4</to><follow>no</follow></action></keybind>
+
+    <keybind key="W-a"><!-- JACK on/off --><action name="Execute"><command>kd-jack</command></action></keybind>
+    <keybind key="W-S-a"><!-- JACK patchbay --><action name="Execute"><command>kd-jack patch</command></action></keybind>
+    <keybind key="XF86AudioRaiseVolume"><!-- Volume up --><action name="Execute"><command>kd-osd vol up</command></action></keybind>
+    <keybind key="XF86AudioLowerVolume"><!-- Volume down --><action name="Execute"><command>kd-osd vol down</command></action></keybind>
+    <keybind key="XF86AudioMute"><!-- Mute --><action name="Execute"><command>kd-osd vol mute</command></action></keybind>
+    <keybind key="XF86AudioMicMute"><!-- Mic mute --><action name="Execute"><command>pactl set-source-mute @DEFAULT_SOURCE@ toggle</command></action></keybind>
+    <keybind key="XF86MonBrightnessUp"><!-- Brightness up --><action name="Execute"><command>kd-osd light up</command></action></keybind>
+    <keybind key="XF86MonBrightnessDown"><!-- Brightness down --><action name="Execute"><command>kd-osd light down</command></action></keybind>
+    <keybind key="XF86AudioPlay"><!-- Play/pause --><action name="Execute"><command>playerctl play-pause</command></action></keybind>
+    <keybind key="XF86AudioNext"><!-- Next track --><action name="Execute"><command>playerctl next</command></action></keybind>
+    <keybind key="XF86AudioPrev"><!-- Previous track --><action name="Execute"><command>playerctl previous</command></action></keybind>
+  </keyboard>
+
+  <mouse>
+    <dragThreshold>3</dragThreshold>
+    <doubleClickTime>300</doubleClickTime>
+    <context name="Frame">
+      <mousebind button="W-Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind>
+      <mousebind button="W-Left" action="Drag"><action name="Move"/></mousebind>
+      <mousebind button="W-Right" action="Drag"><action name="Resize"/></mousebind>
+      <mousebind button="A-Left" action="Drag"><action name="Move"/></mousebind>
+      <mousebind button="A-Right" action="Drag"><action name="Resize"/></mousebind>
+    </context>
+    <!-- grab the window border to resize -->
+    <context name="Top"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="Bottom"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="Left"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="Right"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="TLCorner"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="TRCorner"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="BLCorner"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="BRCorner"><mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind><mousebind button="Left" action="Drag"><action name="Resize"/></mousebind></context>
+    <context name="Titlebar">
+      <mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind>
+      <mousebind button="Left" action="Drag"><action name="Move"/></mousebind>
+      <mousebind button="Left" action="DoubleClick"><action name="ToggleMaximize"/></mousebind>
+      <mousebind button="Right" action="Press"><action name="Focus"/><action name="Raise"/><action name="ShowMenu"><menu>client-menu</menu></action></mousebind>
+    </context>
+    <context name="Client">
+      <mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind>
+      <mousebind button="Middle" action="Press"><action name="Focus"/><action name="Raise"/></mousebind>
+      <mousebind button="Right" action="Press"><action name="Focus"/><action name="Raise"/></mousebind>
+    </context>
+    <context name="Close"><mousebind button="Left" action="Click"><action name="Close"/></mousebind></context>
+    <context name="Iconify"><mousebind button="Left" action="Click"><action name="Iconify"/></mousebind></context>
+    <context name="Maximize"><mousebind button="Left" action="Click"><action name="ToggleMaximize"/></mousebind></context>
+    <context name="Root">
+      <mousebind button="Right" action="Press"><action name="ShowMenu"><menu>root-menu</menu></action></mousebind>
+      <mousebind button="Middle" action="Press"><action name="ShowMenu"><menu>client-list-combined-menu</menu></action></mousebind>
+      <mousebind button="Up" action="Click"><action name="GoToDesktop"><to>previous</to><wrap>no</wrap></action></mousebind>
+      <mousebind button="Down" action="Click"><action name="GoToDesktop"><to>next</to><wrap>no</wrap></action></mousebind>
+    </context>
+  </mouse>
+</openbox_config>

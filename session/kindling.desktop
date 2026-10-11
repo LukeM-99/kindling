@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=kindling
+Comment=Openbox + tint2, only what kindling starts
+Exec=/usr/local/bin/kindling-session
+Type=Application

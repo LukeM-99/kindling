@@ -1,0 +1,7 @@
+#!/bin/sh
+# kd-keys: Openbox keybinds and their comments from rc.xml, in rofi.
+k=$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/kindling/scale" 2>/dev/null || echo 100)   # kd-scale
+sed -n 's/.*<keybind key="\([^"]*\)"><!-- \(.*\) -->.*/\1\t\2/p' ~/.config/openbox/rc.xml |
+  sed 's/W-/Super+/g; s/S-/Shift+/g; s/C-/Ctrl+/g; s/A-/Alt+/g; s/bracketleft/[/; s/bracketright/]/; s/slash/\//; s/period/./; s/equal/=/; s/minus/-/' |
+  awk -F'\t' '{ printf "%-24s %s\n", $1, $2 }' |
+  rofi -dmenu -i -p keys -theme-str "window { width: $((640 * k / 100))px; } element-text { font: \"Hack $((10 * k / 100))\"; }" >/dev/null

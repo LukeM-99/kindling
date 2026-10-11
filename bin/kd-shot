@@ -1,0 +1,12 @@
+#!/bin/sh
+# kd-shot [area|window|delay]: screenshot to ~/Pictures/screenshots and the clipboard.
+f=~/Pictures/screenshots/$(date +%F_%H-%M-%S).png
+mkdir -p "${f%/*}"
+case $1 in
+  area) maim -s -u "$f" ;;
+  window) maim -i "$(xdotool getactivewindow)" "$f" ;;
+  delay) maim -d 3 "$f" ;;
+  *) maim "$f" ;;
+esac || exit
+xclip -sel clip -t image/png "$f"
+notify-send -i "$f" Screenshot "${f##*/}"

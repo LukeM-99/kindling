@@ -1,0 +1,24 @@
+#!/bin/sh
+# kd-osd vol|light [up|down|mute|show]: adjust and flash a dunst progress bar.
+# `kd-osd vol` alone prints the volume for the tint2 executor; `kd-osd vol watch` prints it again
+# whenever PulseAudio's output changes (tint2 runs it continuously, so the bar updates at once).
+case $1 in
+vol)
+  case $2 in
+  up) pamixer -u -i 5 ;; down) pamixer -u -d 5 ;; mute) pamixer -t ;;
+  watch)
+    { echo; pactl subscribe 2>/dev/null; } | while read -r e; do
+      case $e in "" | *" on sink #"* | *" on server"*) ;; *) continue ;; esac
+      now=$("$0" vol); [ "$now" = "$last" ] || echo "$now"; last=$now
+    done
+    exit ;;
+  esac
+  v=$(pamixer --get-volume)
+  [ "$(pamixer --get-mute)" = true ] && v=0
+  [ -z "$2" ] && { [ "$v" = 0 ] && echo "♪ mute" || echo "♪ $v%"; exit; } ;;
+light)
+  case $2 in up) brightnessctl -q s 5%+ ;; down) brightnessctl -q -n1 s 5%- ;; esac
+  v=$(( $(brightnessctl g) * 100 / $(brightnessctl m) )) ;;
+*) exit 1 ;;
+esac
+notify-send -t 1200 -c osd -h string:x-dunst-stack-tag:osd -h int:value:"$v" "$1" "$v%"

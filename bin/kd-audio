@@ -1,0 +1,94 @@
+#!/bin/sh
+# kd-audio [slider [sink|source|input N]] | menu: PulseAudio from the bar, in rofi.
+# slider: a row of 5% steps (0-100); click one, or type a number (up to 150) and Enter.
+#         Default: the output. Picking a level unmutes.
+# menu: output and input devices (pick another to switch to it, and its streams move with it;
+#       pick the current one for its slider), mute, mic mute, each app's own volume, and
+#       pavucontrol when installed. Reopens after each change until Escape.
+# Needs pactl (PulseAudio 15+ for JSON) and jq.
+rofi() { command rofi -dmenu -i -me-select-entry '' -me-accept-entry MousePrimary "$@"; }
+json() { pactl -f json list "$@"; }
+vol='(.volume | to_entries[0].value.value_percent) + (if .mute then " muted" else "" end)'
+
+slider() {
+  case $1 in
+  source) what=source; id=$(pactl get-default-source) ;;
+  input) what=sink-input; id=$2 ;;
+  *) what=sink; id=$(pactl get-default-sink) ;;
+  esac
+  if [ "$what" = sink-input ]; then
+    sel=".[] | select(.index == $id)"; label='.properties["application.name"]'
+  else
+    sel=".[] | select(.name == \"$id\")"; label=.description
+  fi
+  name=$(json "${what}s" | jq -r "$sel | $label")
+  set -- $(json "${what}s" | jq -r "$sel | $vol"); v=${1%\%}
+  [ -n "$v" ] || return 1   # gone (the app stopped playing)
+  n=$(( (v + 2) / 5 )); [ "$n" -gt 20 ] && n=20
+  [ -n "$2" ] || active="-a 0-$n"   # filled up to the volume; empty when muted
+  # cell, gap and padding in whole pixels at the UI scale: rofi gives any leftover width to the last gap
+  k=$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/kindling/scale" 2>/dev/null || echo 100)
+  s() { echo $(( ($1 * k + 50) / 100 )); }   # kd-theme's {{s N}}
+  cell=$(s 24) gap=$(s 5) pad=$(s 12)
+  pick=$(seq 0 20 | sed 's/.*/ /' | rofi -p "$name" -mesg "$v%${2:+ muted}" -format 'i f' -selected-row "$n" $active -theme-str "
+    window { width: $((21 * cell + 20 * gap + 2 * pad + 4))px; padding: ${pad}px; }
+    mainbox { children: [inputbar, message, listview]; }
+    message { border: 0; padding: 0 0.2em; } textbox { text-color: @fg2; }
+    listview { columns: 21; lines: 1; spacing: ${gap}px; }
+    element { padding: 0.9em 0; children: [element-text]; }
+    element normal.normal, element alternate.normal { background-color: @bg2; }
+    element normal.active, element alternate.active { background-color: @accent; }
+    element selected.normal, element selected.active { background-color: @fg; }
+    entry { placeholder: \"click a level, or type 0-150\"; }") || return 1
+  i=${pick%% *}
+  if [ "$i" -ge 0 ]; then v=$((i * 5)); else v=$(echo "${pick#* }" | tr -cd 0-9); fi
+  [ -n "$v" ] && [ "$v" -le 150 ] || return 1
+  pactl "set-$what-mute" "$id" 0
+  pactl "set-$what-volume" "$id" "$v%"
+  [ "$what" = sink ] && kd-osd vol show
+  true
+}
+
+menu() {
+  row=0
+  while :; do
+    sink=$(pactl get-default-sink); source=$(pactl get-default-source)
+    # action<TAB>label<\001>icon<\037>name; rofi shows the label, the picked row's index finds the action
+    rows=$(
+      json sinks | jq -r --arg d "$sink" ".[] | \"sink \(.name)\toutput   \(if .name == \$d then \"●\" else \"○\" end)  \(.description)\(if .name == \$d then \"   \" + $vol else \"\" end)\u0001icon\u001faudio-speakers\""
+      printf 'mute\t%s output\001icon\037audio-volume-muted\n' "$(pamixer --get-mute | sed 's/true/unmute/; s/false/mute/')"
+      json sources | jq -r --arg d "$source" ".[] | select(.monitor_source == \"\") | \"source \(.name)\tinput   \(if .name == \$d then \"●\" else \"○\" end)  \(.description)\(if .name == \$d then \"   \" + $vol else \"\" end)\u0001icon\u001faudio-input-microphone\""
+      printf 'micmute\t%s input\001icon\037microphone-sensitivity-muted\n' "$(pamixer --default-source --get-mute | sed 's/true/unmute/; s/false/mute/')"
+      json sink-inputs | jq -r ".[] | .properties as \$p | select(\$p[\"application.name\"] // \"\" | startswith(\"speech-dispatcher\") | not) |
+        \"input \(.index)\t\(\$p[\"application.name\"] // \"?\")  ·  \(\$p[\"media.name\"] // \"\")   \" + $vol + \"\u0001icon\u001f\(\$p[\"application.icon_name\"] // \"audio-x-generic\")\""
+      command -v pavucontrol >/dev/null && printf 'mixer\tmixer (pavucontrol)\001icon\037multimedia-volume-control\n'
+    )
+    # AppImages (Vesktop) name icons no theme has; use the one kd-appimage cached ("Vesktop-1.6.7.png")
+    for f in "${XDG_CACHE_HOME:-$HOME/.cache}"/kindling/appicons/*.png; do
+      [ -e "$f" ] && b=${f##*/} && rows=$(printf '%s\n' "$rows" | sed "s|\o037${b%%-*}\$|\o037$f|I")
+    done
+    row=$(printf '%s\n' "$rows" | cut -f2- | tr '\001' '\000' |
+      rofi -p audio -no-custom -format i -selected-row "$row" -theme-str 'window { width: 44em; } listview { lines: 12; }') || return
+    set -- $(printf '%s\n' "$rows" | sed -n "$((row + 1))p" | cut -f1)
+    case $1 in
+    sink) if [ "$2" = "$sink" ]; then slider sink; else
+        pactl set-default-sink "$2"
+        for i in $(pactl list short sink-inputs | cut -f1); do pactl move-sink-input "$i" "$2" 2>/dev/null; done
+      fi ;;
+    source) if [ "$2" = "$source" ]; then slider source; else
+        pactl set-default-source "$2"
+        for i in $(pactl list short source-outputs | cut -f1); do pactl move-source-output "$i" "$2" 2>/dev/null; done
+      fi ;;
+    mute) pactl set-sink-mute @DEFAULT_SINK@ toggle ;;
+    micmute) pactl set-source-mute @DEFAULT_SOURCE@ toggle ;;
+    input) slider input "$2" ;;
+    mixer) pavucontrol >/dev/null 2>&1 & return ;;
+    esac
+  done
+}
+
+case $1 in
+menu) menu ;;
+slider) shift; slider "$@" ;;
+*) slider "$@" ;;
+esac

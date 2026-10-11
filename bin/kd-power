@@ -1,0 +1,9 @@
+#!/bin/sh
+# kd-power: rofi power menu (elogind's loginctl, so no systemd needed).
+case $(printf 'lock\nsuspend\nlogout\nreboot\nshutdown\n' | rofi -dmenu -i -p power) in
+  lock) kd-lock ;;
+  suspend) loginctl suspend ;;
+  logout) openbox --exit ;;
+  reboot) loginctl reboot ;;
+  shutdown) loginctl poweroff ;;
+esac
