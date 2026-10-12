@@ -1,0 +1,25 @@
+#!/bin/sh
+# kd-night [on|off|toggle|restore|<kelvin>]: warm the screen at night. Default 4000K. Remembered in
+# the cache; `restore` reapplies it (autostart runs that at login). redshift's one-shot mode sets
+# the colour ramps and exits: no daemon, no geoclue. (xrandr --gamma only bends the curve, so white
+# stayed full blue.)
+# ponytail: no sunrise schedule; add `at`/cron lines if wanted.
+f=${XDG_CACHE_HOME:-$HOME/.cache}/kindling/night
+mkdir -p "${f%/*}"
+[ "$1" = restore ] && { [ -s "$f" ] || exit 0; set -- "$(cat "$f")"; }
+case $1 in
+  ''|toggle) [ -s "$f" ] && set -- off || set -- on ;;
+esac
+case $1 in
+  off) k=6500 ;;
+  on) k=4000 ;;
+  [0-9]*) k=$1 ;;
+  *) echo "usage: kd-night [on|off|toggle|restore|<kelvin 2000-6500>]" >&2; exit 1 ;;
+esac
+case $k in *[!0-9]*) k=0 ;; esac
+[ "$k" -ge 2000 ] && [ "$k" -le 6500 ] || { echo "kd-night: kelvin must be 2000-6500" >&2; exit 1; }
+if [ "$1" = off ]; then : > "$f"; else echo "$k" > "$f"; fi
+echo "kd-night: ${k}K"
+[ -n "$DISPLAY" ] || { echo "kd-night: no X display, nothing applied" >&2; exit 0; }
+# randr skips outputs that are connected but off (no CRTC); -P drops whatever ramp was set before
+if [ "$1" = off ]; then redshift -m randr -x; else redshift -m randr -P -O "$k"; fi >/dev/null

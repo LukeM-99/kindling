@@ -22,7 +22,7 @@ cd Kindling
 
 Read `install.sh` before you run it. It changes your system:
 
-- Runs `sudo apt install` for about 30 packages (openbox, tint2, rofi, dunst, picom, feh, imagemagick, maim, xclip, xdotool, xsecurelock, xss-lock, brightnessctl, pamixer, jq, playerctl, rxvt-unicode, pcmanfm, arandr, xsettingsd, jackd2 and friends).
+- Runs `sudo apt install` for about 30 packages (openbox, tint2, rofi, dunst, picom, feh, imagemagick, maim, xclip, xdotool, xsecurelock, xss-lock, brightnessctl, pamixer, jq, playerctl, rxvt-unicode, pcmanfm, arandr, xsettingsd, redshift (without its geoclue recommendation), jackd2 and friends).
 - Answers `yes` to jackd2's real-time priority question, and adds your user to the `audio` and `video` groups.
 - Symlinks configs and scripts from the clone into `~/.config`, `~/.local/bin` and `~/.asoundrc`. Anything already there that is not a symlink is moved to `~/.dotfiles_backup/<date>/` first.
 - Adds `/usr/local/bin/kindling-session` and `/usr/share/xsessions/kindling.desktop` (with `sudo`) so the session shows up on your login screen.
@@ -47,6 +47,12 @@ Put back anything you want from `~/.dotfiles_backup/`. The installed apt package
 `Ctrl+Alt+W` picks a wallpaper and recolours everything; `Super+/` lists all keybinds; `Super+G` turns the compositor off for the leanest mode. `Super+Shift+Space` launches AppImages from `~/Applications` (override with `KD_APPDIR`).
 
 <p><img src="docs/screenshots/launcher.png" width="49%" alt="App launcher (rofi)"> <img src="docs/screenshots/keys.png" width="49%" alt="Keybind cheat sheet"></p>
+
+## Night light and health check
+
+`kd-night` warms the screen with redshift's one-shot mode, which sets the colour once and exits: no daemon and no geoclue. `kd-night on` sets 4000K, `kd-night off` resets, `kd-night toggle` flips between them, and `kd-night 3000` picks a temperature (2000-6500). `Super+B` toggles it. It is restored at login.
+
+`kd-doctor` prints a one-screen report: missing tools, how much RAM the kindling session uses, battery wear, temperatures, disk space, and whether the bar and compositor are running. It is read-only and needs no root. Parts your hardware lacks, such as a battery, are skipped.
 
 ## Scaling
 

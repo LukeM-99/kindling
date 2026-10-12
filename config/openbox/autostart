@@ -1,5 +1,6 @@
 kd-display  # fit screens to what is plugged in (arandr layout: ~/.screenlayout/default.sh)
 kd-theme
+kd-night restore  # reapply the saved night light
 xsettingsd -c ~/.cache/kindling/xsettingsd &  # live DPI for GTK apps
 tint2 -c ~/.cache/kindling/tint2rc &
 picom -b --experimental-backends

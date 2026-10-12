@@ -45,6 +45,7 @@
     <keybind key="W-minus"><!-- UI scale down --><action name="Execute"><command>kd-scale down</command></action></keybind>
     <keybind key="W-0"><!-- UI scale reset --><action name="Execute"><command>kd-scale reset</command></action></keybind>
     <keybind key="W-g"><!-- Toggle compositor (lite mode) --><action name="Execute"><command>sh -c 'pkill -x picom || picom -b --experimental-backends'</command></action></keybind>
+    <keybind key="W-b"><!-- Night light on/off (kd-night) --><action name="Execute"><command>kd-night toggle</command></action></keybind>
 
     <keybind key="Print"><!-- Screenshot: area --><action name="Execute"><command>kd-shot area</command></action></keybind>
     <keybind key="W-S-s"><!-- Screenshot: area --><action name="Execute"><command>kd-shot area</command></action></keybind>
@@ -53,23 +54,23 @@
     <keybind key="C-Print"><!-- Screenshot: 3s delay --><action name="Execute"><command>kd-shot delay</command></action></keybind>
 
     <keybind key="W-q"><!-- Close window --><action name="Close"/></keybind>
-    <keybind key="W-f"><!-- Maximize --><action name="ToggleMaximize"/></keybind>
+    <keybind key="W-f"><!-- Maximize (kd-snap: gaps on every monitor edge) --><action name="Unmaximize"/><action name="Execute"><command>kd-snap max</command></action></keybind>
     <keybind key="W-S-f"><!-- Fullscreen --><action name="ToggleFullscreen"/></keybind>
     <keybind key="W-n"><!-- Minimize --><action name="Iconify"/></keybind>
     <keybind key="W-c"><!-- Centre window --><action name="Unmaximize"/><action name="MoveResizeTo"><x>center</x><y>center</y><width>60%</width><height>70%</height></action></keybind>
     <keybind key="A-Tab"><!-- Cycle windows --><action name="NextWindow"><finalactions><action name="Focus"/><action name="Raise"/><action name="Unshade"/></finalactions></action></keybind>
-    <keybind key="W-i"><!-- Snap top half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>100%</width><height>50%</height></action></keybind>
-    <keybind key="W-Up"><!-- Snap top half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>100%</width><height>50%</height></action></keybind>
-    <keybind key="W-j"><!-- Snap left half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
-    <keybind key="W-Left"><!-- Snap left half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
-    <keybind key="W-k"><!-- Snap bottom half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>-0</y><width>100%</width><height>50%</height></action></keybind>
-    <keybind key="W-Down"><!-- Snap bottom half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>-0</y><width>100%</width><height>50%</height></action></keybind>
-    <keybind key="W-l"><!-- Snap right half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
-    <keybind key="W-Right"><!-- Snap right half --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>0</y><width>50%</width><height>100%</height></action></keybind>
-    <keybind key="W-u"><!-- Snap top-left quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>0</y><width>50%</width><height>50%</height></action></keybind>
-    <keybind key="W-o"><!-- Snap top-right quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>0</y><width>50%</width><height>50%</height></action></keybind>
-    <keybind key="W-m"><!-- Snap bottom-left quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>0</x><y>-0</y><width>50%</width><height>50%</height></action></keybind>
-    <keybind key="W-period"><!-- Snap bottom-right quarter --><action name="Unmaximize"/><action name="MoveResizeTo"><x>-0</x><y>-0</y><width>50%</width><height>50%</height></action></keybind>
+    <keybind key="W-i"><!-- Snap top half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap top</command></action></keybind>
+    <keybind key="W-Up"><!-- Snap top half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap top</command></action></keybind>
+    <keybind key="W-j"><!-- Snap left half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap left</command></action></keybind>
+    <keybind key="W-Left"><!-- Snap left half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap left</command></action></keybind>
+    <keybind key="W-k"><!-- Snap bottom half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap bottom</command></action></keybind>
+    <keybind key="W-Down"><!-- Snap bottom half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap bottom</command></action></keybind>
+    <keybind key="W-l"><!-- Snap right half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap right</command></action></keybind>
+    <keybind key="W-Right"><!-- Snap right half --><action name="Unmaximize"/><action name="Execute"><command>kd-snap right</command></action></keybind>
+    <keybind key="W-u"><!-- Snap top-left quarter --><action name="Unmaximize"/><action name="Execute"><command>kd-snap tl</command></action></keybind>
+    <keybind key="W-o"><!-- Snap top-right quarter --><action name="Unmaximize"/><action name="Execute"><command>kd-snap tr</command></action></keybind>
+    <keybind key="W-m"><!-- Snap bottom-left quarter --><action name="Unmaximize"/><action name="Execute"><command>kd-snap bl</command></action></keybind>
+    <keybind key="W-period"><!-- Snap bottom-right quarter --><action name="Unmaximize"/><action name="Execute"><command>kd-snap br</command></action></keybind>
     <keybind key="W-S-i"><!-- Move window up --><action name="MoveRelative"><x>0</x><y>-40</y></action></keybind>
     <keybind key="W-S-j"><!-- Move window left --><action name="MoveRelative"><x>-40</x><y>0</y></action></keybind>
     <keybind key="W-S-k"><!-- Move window down --><action name="MoveRelative"><x>0</x><y>40</y></action></keybind>
@@ -126,7 +127,7 @@
     <context name="Titlebar">
       <mousebind button="Left" action="Press"><action name="Focus"/><action name="Raise"/></mousebind>
       <mousebind button="Left" action="Drag"><action name="Move"/></mousebind>
-      <mousebind button="Left" action="DoubleClick"><action name="ToggleMaximize"/></mousebind>
+      <mousebind button="Left" action="DoubleClick"><action name="Unmaximize"/><action name="Execute"><command>kd-snap max</command></action></mousebind>
       <mousebind button="Right" action="Press"><action name="Focus"/><action name="Raise"/><action name="ShowMenu"><menu>client-menu</menu></action></mousebind>
     </context>
     <context name="Client">
@@ -136,7 +137,7 @@
     </context>
     <context name="Close"><mousebind button="Left" action="Click"><action name="Close"/></mousebind></context>
     <context name="Iconify"><mousebind button="Left" action="Click"><action name="Iconify"/></mousebind></context>
-    <context name="Maximize"><mousebind button="Left" action="Click"><action name="ToggleMaximize"/></mousebind></context>
+    <context name="Maximize"><mousebind button="Left" action="Click"><action name="Unmaximize"/><action name="Execute"><command>kd-snap max</command></action></mousebind></context>
     <context name="Root">
       <mousebind button="Right" action="Press"><action name="ShowMenu"><menu>root-menu</menu></action></mousebind>
       <mousebind button="Middle" action="Press"><action name="ShowMenu"><menu>client-list-combined-menu</menu></action></mousebind>

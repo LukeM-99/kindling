@@ -1,0 +1,47 @@
+#!/bin/sh
+# kd-doctor: one-screen health and footprint report for an old machine. Read-only, no root.
+# Missing tools, what the desktop costs in RAM, battery wear, temperatures, disk. Any part
+# that the hardware lacks (no battery, no sensors) is skipped.
+echo "== tools"
+miss=
+for c in openbox tint2 rofi dunst picom feh convert maim xclip xdotool xsecurelock xss-lock \
+  brightnessctl pamixer pactl jq playerctl urxvt pcmanfm arandr xsettingsd xrandr redshift; do
+  command -v "$c" >/dev/null || miss="$miss $c"
+done
+if [ -n "$miss" ]; then echo "missing:$miss"; else echo "all present"; fi
+
+echo "== memory"
+free -m | awk '/^Mem/ { printf "RAM %d MB total, %d MB available\n", $2, $7 } /^Swap/ && $2 { printf "swap %d/%d MB used\n", $3, $2 }'
+# PSS (shared pages split fairly) of this user's processes, kindling's own set versus the rest
+for p in /proc/[0-9]*; do
+  n=$(cat "$p/comm" 2>/dev/null) && kb=$(awk '/^Pss:/ { print $2 }' "$p/smaps_rollup" 2>/dev/null) &&
+    [ -n "$kb" ] && echo "$n $kb"
+done | awk '
+  BEGIN { split("openbox tint2 rofi dunst picom xsettingsd xss-lock kd-clip kd-display nm-applet blueman-applet", a, " "); for (i in a) mine[a[i]] = 1 }
+  { t[$1] += $2; if ($1 in mine) k += $2; else o += $2 }
+  END {
+    printf "kindling session %d MB (your processes only)\n", k / 1024
+    for (n in mine) if (t[n]) printf "%d\t  %s\n", t[n] / 1024, n | "sort -rn"
+    close("sort -rn"); printf "everything else of yours %d MB\n", o / 1024 }'
+
+for b in /sys/class/power_supply/BAT*; do
+  [ -d "$b" ] || continue
+  echo "== battery ${b##*/}"
+  # energy_* (uWh) or charge_* (uAh), whichever the driver exposes
+  for u in energy charge; do
+    [ -r "$b/${u}_full" ] && [ -r "$b/${u}_full_design" ] &&
+      awk -v f="$(cat "$b/${u}_full")" -v d="$(cat "$b/${u}_full_design")" -v s="$(cat "$b/status")" -v c="$(cat "$b/capacity")" \
+        'BEGIN { if (d > 0) printf "%s%%, %s; holds %d%% of its original capacity\n", c, s, f * 100 / d }'
+  done
+done
+
+t=$(for z in /sys/class/thermal/thermal_zone*; do
+  [ -r "$z/temp" ] && echo "$(cat "$z/type") $(( $(cat "$z/temp") / 1000 ))C"
+done | paste -sd' ')
+[ -n "$t" ] && { echo "== temperatures"; echo "$t"; }
+
+echo "== disk"
+df -h / "$HOME" 2>/dev/null | awk 'NR == 1 || !seen[$6]++ { print }'
+echo "== session"
+pgrep -x openbox >/dev/null && { pgrep -x tint2 >/dev/null || echo "tint2 not running (bar missing)"; pgrep -x picom >/dev/null || echo "picom off (lean mode, or it crashed)"; } ||
+  echo "openbox is not running: no desktop session here"
