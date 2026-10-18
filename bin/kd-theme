@@ -5,7 +5,8 @@ ROOT=$(dirname "$(dirname "$(readlink -f "$0")")")
 CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/kindling
 mkdir -p "$CACHE" "$HOME/.themes/kindling/openbox-3"
 
-[ -n "$1" ] && readlink -f "$1" > "$CACHE/wallpaper"
+[ -z "$1" ] || [ -f "$1" ] || { echo "kd-theme: $1: no such file" >&2; exit 1; }
+[ -n "$1" ] && readlink -f -- "$1" > "$CACHE/wallpaper"
 wall=$(cat "$CACHE/wallpaper" 2>/dev/null || ls -d "${KD_WALLDIR:-$HOME/Pictures/Pape}"/* | head -1)
 [ -f "$wall" ] || { echo "kd-theme: no wallpaper" >&2; exit 1; }
 

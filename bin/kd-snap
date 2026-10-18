@@ -1,9 +1,10 @@
 #!/bin/sh
-# kd-snap [max|left|right|top|bottom|tl|tr|bl|br] [window]: fit the active window to its own monitor
+# kd-snap [max|left|right|top|bottom|tl|tr|bl|br|next|prev] [window]: fit the active window to its own monitor
 # less the Openbox <margins>, or to a half/quarter of that with the same gap between them. Openbox
 # applies margins to the edges of the whole X screen, so with several monitors its own Maximize and
 # MoveResizeTo leave no gap where they meet. max toggles: the size before is kept in
-# $XDG_RUNTIME_DIR/kd-snap/<window> and put back on the next one.
+# $XDG_RUNTIME_DIR/kd-snap/<window> and put back on the next one. next/prev: maximise it on the
+# monitor after/before its own (xrandr order, wrapping round).
 where=${1:-max}
 win=${2:-$(xdotool getactivewindow)} || exit
 saved=${XDG_RUNTIME_DIR:-/tmp}/kd-snap/$win
@@ -17,16 +18,23 @@ eval "$(xwininfo -id "$win" | awk -F: '
   /Width/ { print "w=" $2 + 0 } /Height/ { print "h=" $2 + 0 }')"
 fx=$((x - l)) fy=$((y - t)) fw=$((w + l + r)) fh=$((h + t + b))
 
-# monitor holding the frame's centre, and the margins kd-theme rendered into rc.xml
-set -- $(xrandr --current | grep -o ' connected[a-z ]* [0-9]*x[0-9]*+[0-9]*+[0-9]*' | awk -v cx=$((fx + fw / 2)) -v cy=$((fy + fh / 2)) '
-  { split($NF, g, /[x+]/) }
-  cx >= g[3] && cx < g[3] + g[1] && cy >= g[4] && cy < g[4] + g[2] { print g[1], g[2], g[3], g[4]; exit }')
+# monitor nearest the frame's centre (holding it, or the closest when a layout change left the
+# window off every screen), and the margins kd-theme rendered into rc.xml
+case $where in next) step=1 ;; prev) step=-1 ;; *) step=0 ;; esac
+set -- $(xrandr --current | grep -o ' connected[a-z ]* [0-9]*x[0-9]*+[0-9]*+[0-9]*' | awk -v cx=$((fx + fw / 2)) -v cy=$((fy + fh / 2)) -v step=$step '
+  { split($NF, g, /[x+]/); m[NR] = g[1] " " g[2] " " g[3] " " g[4]
+    dx = cx < g[3] ? g[3] - cx : cx >= g[3] + g[1] ? cx - g[3] - g[1] + 1 : 0
+    dy = cy < g[4] ? g[4] - cy : cy >= g[4] + g[2] ? cy - g[4] - g[2] + 1 : 0
+    if (NR == 1 || dx * dx + dy * dy < best) { best = dx * dx + dy * dy; i = NR } }
+  END { if (NR) print m[(i - 1 + step + NR) % NR + 1] }')
 [ $# = 4 ] || exit
 set -- "$@" $(sed -n 's:.*<margins><top>\([0-9]*\)</top><bottom>\([0-9]*\)</bottom><left>\([0-9]*\)</left><right>\([0-9]*\)</right>.*:\1 \2 \3 \4:p' \
   "${XDG_CONFIG_HOME:-$HOME/.config}/openbox/rc.xml") 0 0 0 0
 tx=$(($3 + $7)) ty=$(($4 + $5)) tw=$(($1 - $7 - $8)) th=$(($2 - $5 - $6)) gap=$7
 
-if [ "$where" = max ]; then
+if [ "$where" = next ] || [ "$where" = prev ]; then
+  rm -f "$saved"   # its old size belongs to the other monitor
+elif [ "$where" = max ]; then
   # maximised = sitting at the target's corner (terminals' size steps can stop it filling exactly)
   if [ "$fx $fy" = "$tx $ty" ] && [ -f "$saved" ]; then
     read tx ty tw th < "$saved"

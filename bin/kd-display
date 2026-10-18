@@ -1,10 +1,13 @@
 #!/bin/sh
 # kd-display [watch]: fit the screen layout to what's plugged in and whether the lid is open.
-# External screens connected: use the arandr layout in ~/.screenlayout/default.sh if every
-# screen it turns on is present, else line them up left to right. Laptop panel only: turn it
-# on and everything else off. The panel goes off whenever the lid is closed.
+# The screens to light are everything connected, less the laptop panel when the lid is closed (it
+# stays on if it's the only screen). If an arandr layout in ~/.screenlayout/*.sh lights exactly
+# those, run it; save one per setup (e.g. desk-1.sh, desk-2.sh). Otherwise line them up left to
+# right, external screens primary, and turn off the rest. Then reapply the night light (new
+# screens come up at normal colour) and the layout's UI scale.
+# Windows on a screen that goes away are moved to the primary one, at the same place and size
+# relative to the screen, and go back when their screen returns (remembered for this login).
 # watch: re-run whenever a screen is plugged/unplugged or the lid opens/closes.
-layout=$HOME/.screenlayout/default.sh
 
 state() { cat /sys/class/drm/card*-*/status /proc/acpi/button/lid/*/state 2>/dev/null; }
 
@@ -17,28 +20,95 @@ if [ "$1" = watch ]; then
   done
 fi
 
+mem=${XDG_RUNTIME_DIR:-/tmp}/kd-display/windows   # id screen x y w h, as fractions of that screen
+mkdir -p "${mem%/*}" && touch "$mem"
+
+# lit outputs as "name w h x y", including unplugged ones still lit until the xrandr below
+lit() { xrandr --current | grep -o '^[^ ]* [a-z ]*[0-9]*x[0-9]*+[0-9]*+[0-9]*' |
+  awk '{ split($NF, g, /[x+]/); print $1, g[1], g[2], g[3], g[4] }'; }
+# managed windows, not docks or the desktop, as "id x y w h l r t b": frame geometry and the
+# frame extents (as in kd-snap)
+frames() {
+  for id in $(xprop -root _NET_CLIENT_LIST | cut -sd'#' -f2 | tr -d ,); do
+    xprop -id "$id" _NET_WM_WINDOW_TYPE | grep -q -e DOCK -e DESKTOP && continue
+    set -- $(xprop -id "$id" _NET_FRAME_EXTENTS | cut -sd= -f2 | tr -d ,) 0 0 0 0
+    xwininfo -id "$id" | awk -F: -v id=$((id)) -v l="$1" -v r="$2" -v t="$3" -v b="$4" '
+      /Absolute upper-left X/ { x = $2 } /Absolute upper-left Y/ { y = $2 }
+      /Width/ { w = $2 } /Height/ { h = $2 }
+      END { print id, x - l, y - t, w + l + r, h + t + b, l, r, t, b }'
+  done
+}
+
 connected=$(xrandr --query | awk '$2 == "connected" { print $1 }')
 panel=$(echo "$connected" | grep -E '^(eDP|LVDS)' | head -1)
 external=$(echo "$connected" | grep -vxF "${panel:-none}")
-grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null && lid=closed
+[ -n "$panel" ] && [ -n "$external" ] && grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null && lid=closed
+want=$({ [ "$lid" = closed ] || echo "$panel"; echo "$external"; } | grep . | sort | paste -sd' ')
 
-if [ -z "$external" ]; then
-  xrandr --auto --output "$panel" --auto --primary
-elif [ -x "$layout" ] && [ -z "$(grep -o -- '--output [^ ]* --[a-z]*' "$layout" |
-    awk '$3 != "--off" { print $2 }' | grep -vxF "$connected")" ]; then
-  "$layout"
-else
-  set -- --auto
+# remember the windows on screens about to go out; a window already remembered keeps its first screen
+{ lit; echo --; cat "$mem"; echo --; frames; } | awk -v want=" $want " '
+  $1 == "--" { part++; next }
+  part == 0 { n++; on[n] = $1; ow[n] = $2; oh[n] = $3; ox[n] = $4; oy[n] = $5; next }
+  part == 1 { print; known[$1]; next }
+  !($1 in known) { cx = $2 + $4 / 2; cy = $3 + $5 / 2
+    for (i = 1; i <= n; i++)
+      if (cx >= ox[i] && cx < ox[i] + ow[i] && cy >= oy[i] && cy < oy[i] + oh[i]) {
+        if (index(want, " " on[i] " ") == 0)
+          print $1, on[i], ($2 - ox[i]) / ow[i], ($3 - oy[i]) / oh[i], $4 / ow[i], $5 / oh[i]
+        break } }' > "$mem.new" && mv "$mem.new" "$mem"
+
+for f in "$HOME"/.screenlayout/*.sh; do
+  [ -x "$f" ] && [ "$(grep -o -- '--output [^ ]* --[a-z]*' "$f" |
+    awk '$3 != "--off" { print $2 }' | sort | paste -sd' ')" = "$want" ] && "$f" && break
+  f=
+done
+
+if [ -z "$f" ]; then
+  primary=$(echo "$external" | head -1); primary=${primary:-$panel}
+  set -- --auto   # also turns off outputs that are lit but no longer connected
   prev=
-  [ -n "$panel" ] && if [ "$lid" = closed ]; then set -- "$@" --output "$panel" --off
-    else set -- "$@" --output "$panel" --auto; prev=$panel; fi
+  if [ "$lid" = closed ]; then set -- "$@" --output "$panel" --off
+  elif [ -n "$panel" ]; then set -- "$@" --output "$panel" --auto; prev=$panel; fi
   for o in $external; do
     set -- "$@" --output "$o" --auto ${prev:+--right-of "$prev"}
     prev=$o
   done
+  [ -n "$primary" ] && set -- "$@" --output "$primary" --primary
   xrandr "$@"
+fi
+
+# remembered windows: back to their screen if it's lit again, else onto the primary screen if
+# they're off every screen (left where they are otherwise, e.g. moved there since)
+if [ -s "$mem" ]; then
+  sleep .5   # let Openbox settle the new layout first
+  { lit; echo --; xrandr --current | awk '/ primary [0-9]/ { print $1 }'; echo --; cat "$mem"; echo --; frames; } | awk '
+    $1 == "--" { part++; next }
+    part == 0 { n++; at[$1] = n; on[n] = $1; ow[n] = $2; oh[n] = $3; ox[n] = $4; oy[n] = $5; next }
+    part == 1 { prim = $1; next }
+    part == 2 { home[$1] = $2; fx[$1] = $3; fy[$1] = $4; fw[$1] = $5; fh[$1] = $6; line[$1] = $0; next }
+    $1 in home {
+      if (home[$1] in at) i = at[home[$1]]
+      else {
+        print "keep", line[$1]
+        cx = $2 + $4 / 2; cy = $3 + $5 / 2
+        for (i = 1; i <= n; i++) if (cx >= ox[i] && cx < ox[i] + ow[i] && cy >= oy[i] && cy < oy[i] + oh[i]) next
+        i = prim in at ? at[prim] : 1
+        if (i > n) next
+      }
+      w = fw[$1] * ow[i]; if (w > ow[i]) w = ow[i]
+      h = fh[$1] * oh[i]; if (h > oh[i]) h = oh[i]
+      x = ox[i] + fx[$1] * ow[i]; if (x + w > ox[i] + ow[i]) x = ox[i] + ow[i] - w; if (x < ox[i]) x = ox[i]
+      y = oy[i] + fy[$1] * oh[i]; if (y + h > oy[i] + oh[i]) y = oy[i] + oh[i] - h; if (y < oy[i]) y = oy[i]
+      printf "move %d %d %d %d %d\n", $1, x + .5, y + .5, w - $6 - $7 + .5, h - $8 - $9 + .5 }' > "$mem.new"
+  sed -n 's/^keep //p' "$mem.new" > "$mem"
+  # Openbox places the frame's top-left at the requested position; size is the client's
+  sed -n 's/^move //p' "$mem.new" | while read -r id x y w h; do
+    xdotool windowsize "$id" "$w" "$h" windowmove "$id" "$x" "$y"
+  done
+  rm -f "$mem.new"
 fi
 
 wall=$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/kindling/wallpaper" 2>/dev/null) &&
   feh --no-fehbg --bg-fill "$wall"
+kd-night restore >/dev/null
 kd-scale   # each layout keeps its own UI scale

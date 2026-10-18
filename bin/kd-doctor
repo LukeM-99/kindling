@@ -17,7 +17,7 @@ for p in /proc/[0-9]*; do
   n=$(cat "$p/comm" 2>/dev/null) && kb=$(awk '/^Pss:/ { print $2 }' "$p/smaps_rollup" 2>/dev/null) &&
     [ -n "$kb" ] && echo "$n $kb"
 done | awk '
-  BEGIN { split("openbox tint2 rofi dunst picom xsettingsd xss-lock kd-clip kd-display nm-applet blueman-applet", a, " "); for (i in a) mine[a[i]] = 1 }
+  BEGIN { split("openbox tint2 rofi dunst picom xsettingsd xss-lock kd-lock kd-clip kd-display nm-applet blueman-applet", a, " "); for (i in a) mine[a[i]] = 1 }
   { t[$1] += $2; if ($1 in mine) k += $2; else o += $2 }
   END {
     printf "kindling session %d MB (your processes only)\n", k / 1024

@@ -1,7 +1,13 @@
 #!/bin/sh
 # kd-power: rofi power menu (elogind's loginctl, so no systemd needed).
-case $(printf 'lock\nsuspend\nlogout\nreboot\nshutdown\n' | rofi -dmenu -i -p power) in
+# Switch user asks the display manager (LightDM or SDDM) over D-Bus to show its greeter,
+# locking first so this session isn't left open behind it.
+case $(printf 'lock\nswitch user\nsuspend\nlogout\nreboot\nshutdown\n' | rofi -dmenu -i -p power) in
   lock) kd-lock ;;
+  'switch user')
+    kd-lock & sleep 1
+    dbus-send --system --type=method_call --dest=org.freedesktop.DisplayManager \
+      "${XDG_SEAT_PATH:?no display manager seat}" org.freedesktop.DisplayManager.Seat.SwitchToGreeter ;;
   suspend) loginctl suspend ;;
   logout) openbox --exit ;;
   reboot) loginctl reboot ;;

@@ -13,7 +13,7 @@ background_color = {{urgent}} 100
 rounded = 1
 background_color = {{accent}} 100
 
-panel_items = PTCEEBS
+panel_items = PTCEEBSP
 panel_shrink = 1
 panel_size = 50% {{s 36}}
 panel_margin = {{s 0}} {{s 8}}
@@ -34,6 +34,14 @@ button_font_color = {{accent}} 100
 button_padding = {{s 8}} {{s 0}}
 button_lclick_command = rofi -show drun
 button_rclick_command = kd-power
+
+button = new
+button_text = ⏻
+button_font = Noto Sans Bold {{s 11}}
+button_font_color = {{fg2}} 100
+button_padding = {{s 6}} {{s 0}}
+button_tooltip = Lock, switch user, log out, suspend, reboot, shut down
+button_lclick_command = kd-power
 
 taskbar_mode = single_desktop
 taskbar_padding = {{s 0}} {{s 0}} {{s 4}}

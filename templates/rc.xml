@@ -71,6 +71,8 @@
     <keybind key="W-o"><!-- Snap top-right quarter --><action name="Unmaximize"/><action name="Execute"><command>kd-snap tr</command></action></keybind>
     <keybind key="W-m"><!-- Snap bottom-left quarter --><action name="Unmaximize"/><action name="Execute"><command>kd-snap bl</command></action></keybind>
     <keybind key="W-period"><!-- Snap bottom-right quarter --><action name="Unmaximize"/><action name="Execute"><command>kd-snap br</command></action></keybind>
+    <keybind key="W-S-Right"><!-- Maximise on the next monitor --><action name="Unmaximize"/><action name="Execute"><command>kd-snap next</command></action></keybind>
+    <keybind key="W-S-Left"><!-- Maximise on the previous monitor --><action name="Unmaximize"/><action name="Execute"><command>kd-snap prev</command></action></keybind>
     <keybind key="W-S-i"><!-- Move window up --><action name="MoveRelative"><x>0</x><y>-40</y></action></keybind>
     <keybind key="W-S-j"><!-- Move window left --><action name="MoveRelative"><x>-40</x><y>0</y></action></keybind>
     <keybind key="W-S-k"><!-- Move window down --><action name="MoveRelative"><x>0</x><y>40</y></action></keybind>

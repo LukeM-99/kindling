@@ -3,6 +3,15 @@
 # Stays in the foreground (xss-lock needs that). The first keypress only wakes the prompt
 # (xsecurelock's default, so you never type a password into a blank, maybe-off screen).
 # Text size follows Xft.dpi, so kd-scale covers it.
+# `kd-lock awake` (from autostart) keeps the screen from blanking and locking while any
+# MPRIS player (browser video, VLC, Spotify...) is playing: it nudges the X idle timer,
+# which xss-lock and DPMS both count from, well inside the 10 minute timeout.
+if [ "$1" = awake ]; then
+  while sleep 60; do
+    playerctl -a status 2>/dev/null | grep -qx Playing && xset s reset
+  done
+fi
+
 . "${XDG_CACHE_HOME:-$HOME/.cache}/kindling/colors"
 
 # Run by xsecurelock as the saver (it sets XSCREENSAVER_WINDOW, one per monitor): fill the
