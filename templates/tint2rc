@@ -94,12 +94,13 @@ execp_lclick_command = kd-audio
 execp_rclick_command = kd-audio menu
 execp_mclick_command = kd-osd vol mute
 execp_tooltip = click: volume · right-click: devices and apps · middle-click: mute
-execp_scroll_up_command = kd-osd vol up
-execp_scroll_down_command = kd-osd vol down
+execp_uwheel_command = kd-osd vol up
+execp_dwheel_command = kd-osd vol down
 
 battery_hide = 101
 battery_low_status = 15
-battery_low_cmd = notify-send -u critical Battery "Plug in soon"
+# guarded: with no battery (a desktop) tint2 reports it as low and would warn at every login
+battery_low_cmd = ls /sys/class/power_supply/BAT* >/dev/null 2>&1 && notify-send -u critical Battery "Plug in soon"
 bat1_format = ⚡ %p
 bat2_format =
 bat1_font = Noto Sans {{s 9}}

@@ -11,6 +11,7 @@ json() { pactl -f json list "$@"; }
 vol='(.volume | to_entries[0].value.value_percent) + (if .mute then " muted" else "" end)'
 
 slider() {
+  active=   # set below only when unmuted; reset, or a muted slider after an unmuted one keeps its fill
   case $1 in
   source) what=source; id=$(pactl get-default-source) ;;
   input) what=sink-input; id=$2 ;;

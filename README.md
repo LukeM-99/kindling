@@ -46,7 +46,7 @@ Put back anything you want from `~/.dotfiles_backup/`. The installed apt package
 
 The `⏻` at the right end of the bar (or `Super+Escape`) opens the power menu: lock, switch user, suspend, log out, reboot, shut down. `Super+BackSpace` locks straight away. The screen otherwise locks after 10 idle minutes, except while something is playing (YouTube, a film, music: anything `playerctl` sees).
 
-`Ctrl+Alt+W` picks a wallpaper and recolours everything; `Super+/` lists all keybinds; `Super+G` turns the compositor off for the leanest mode. `Super+Shift+Space` launches AppImages from `~/Applications` (override with `KD_APPDIR`).
+`Ctrl+Alt+W` picks a wallpaper and recolours everything; `Super+/` lists all keybinds; `Super+C` centres the window at two thirds of its monitor; `Super+G` turns the compositor off for the leanest mode. `Super+Shift+Space` launches AppImages from `~/Applications` (override with `KD_APPDIR`).
 
 <p><img src="docs/screenshots/launcher.png" width="49%" alt="App launcher (rofi)"> <img src="docs/screenshots/keys.png" width="49%" alt="Keybind cheat sheet"></p>
 

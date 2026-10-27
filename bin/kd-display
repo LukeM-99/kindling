@@ -40,7 +40,7 @@ frames() {
 }
 
 connected=$(xrandr --query | awk '$2 == "connected" { print $1 }')
-panel=$(echo "$connected" | grep -E '^(eDP|LVDS)' | head -1)
+panel=$(echo "$connected" | grep -E '^(eDP|LVDS|DSI)' | head -1)   # DSI: tablets and some small laptops
 external=$(echo "$connected" | grep -vxF "${panel:-none}")
 [ -n "$panel" ] && [ -n "$external" ] && grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null && lid=closed
 want=$({ [ "$lid" = closed ] || echo "$panel"; echo "$external"; } | grep . | sort | paste -sd' ')

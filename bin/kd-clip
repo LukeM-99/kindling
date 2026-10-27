@@ -1,17 +1,22 @@
 #!/bin/sh
 # kd-clip [daemon]: clipboard history. `daemon` polls the clipboard once a second
 # (Devuan has no clipnotify/clipmenu); no argument picks an entry in rofi.
+umask 077   # copies include passwords: only you can read the history
 dir=${XDG_CACHE_HOME:-$HOME/.cache}/kindling/clips
-mkdir -p "$dir" && cd "$dir" || exit
+mkdir -p "$dir" && chmod 700 "$dir" && cd "$dir" || exit
 
 if [ "$1" = daemon ]; then
+  exec 9> .lock
+  flock -n 9 || exit 0   # one daemon per login: a re-login doesn't add another
   last=
   while sleep 1; do
+    xprop -root -len 0 _NET_SUPPORTED >/dev/null 2>&1 || exit 0   # X is gone (logged out): stop
     now=$(xclip -sel clip -o 2>/dev/null) || continue
     [ -n "$now" ] && [ "$now" != "$last" ] || continue
     last=$now
     # named by content hash: copying something again just bumps it to the top
-    printf '%s' "$now" > "$(printf '%s' "$now" | md5sum | cut -c1-16)"
+    # written aside, then moved in, so the picker never reads a half-written entry
+    printf '%s' "$now" > ".tmp.$$" && mv -f ".tmp.$$" "$(printf '%s' "$now" | md5sum | cut -c1-16)"
     ls -t | tail -n +51 | xargs -r rm --
   done
 fi

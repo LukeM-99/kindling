@@ -7,7 +7,15 @@ mkdir -p "$CACHE" "$HOME/.themes/kindling/openbox-3"
 
 [ -z "$1" ] || [ -f "$1" ] || { echo "kd-theme: $1: no such file" >&2; exit 1; }
 [ -n "$1" ] && readlink -f -- "$1" > "$CACHE/wallpaper"
-wall=$(cat "$CACHE/wallpaper" 2>/dev/null || ls -d "${KD_WALLDIR:-$HOME/Pictures/Pape}"/* | head -1)
+wall=$(cat "$CACHE/wallpaper" 2>/dev/null) || true
+# a remembered wallpaper that was since deleted falls back to the folder's first image (and is remembered,
+# since kd-display re-sets the background from the cache), so login still themes the desktop
+if [ ! -f "$wall" ]; then
+  for f in "${KD_WALLDIR:-$HOME/Pictures/Pape}"/*; do
+    case $f in *.[jJ][pP]*[gG]|*.[pP][nN][gG]|*.[wW][eE][bB][pP]) [ -f "$f" ] && wall=$f && break ;; esac
+  done
+  [ -f "$wall" ] && echo "$wall" > "$CACHE/wallpaper"
+fi
 [ -f "$wall" ] || { echo "kd-theme: no wallpaper" >&2; exit 1; }
 
 # 8 dominant colours -> roles. Background/foreground keep the wallpaper's hue but

@@ -7,7 +7,8 @@ cd "$(dirname "$(readlink -f "$0")")"
 echo "jackd2 jackd/tweak_rt_limits boolean true" | sudo debconf-set-selections
 sudo apt install -y openbox tint2 rofi dunst picom feh imagemagick maim xclip xdotool \
   xsecurelock xss-lock brightnessctl pamixer jq playerctl rxvt-unicode libnotify-bin \
-  pcmanfm arandr libfuse2 libx11-protocol-perl librsvg2-bin xsettingsd adwaita-icon-theme fonts-noto-core fonts-hack jackd2 pulseaudio-module-jack libasound2-plugins
+  pcmanfm arandr libfuse2 libx11-protocol-perl \
+  x11-utils x11-xserver-utils pulseaudio-utils librsvg2-bin xsettingsd adwaita-icon-theme fonts-noto-core fonts-hack jackd2 pulseaudio-module-jack libasound2-plugins
 sudo apt install -y --no-install-recommends redshift  # kd-night; its recommends would pull in geoclue
 for g in video audio; do id -nG | grep -qw $g || sudo adduser "$USER" $g; done  # brightnessctl, jackd realtime
 

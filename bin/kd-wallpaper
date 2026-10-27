@@ -2,12 +2,15 @@
 # kd-wallpaper: pick a wallpaper from a rofi thumbnail grid, then retheme everything.
 dir=${KD_WALLDIR:-$HOME/Pictures/Pape}
 thumbs=${XDG_CACHE_HOME:-$HOME/.cache}/kindling/thumbs
+[ -d "$dir" ] || { notify-send kindling "No wallpaper folder: $dir (set KD_WALLDIR)"; exit 1; }   # run from a key: say it on screen
 mkdir -p "$thumbs"
 k=$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/kindling/scale" 2>/dev/null || echo 100)   # kd-scale
 px() { echo $(($1 * k / 100))px; }
 pick=$(for f in "$dir"/*; do
+  case $f in *.[jJ][pP]*[gG] | *.[pP][nN][gG] | *.[wW][eE][bB][pP]) ;; *) continue ;; esac   # as kd-theme's fallback
+  [ -f "$f" ] || continue
   t=$thumbs/${f##*/}.png
-  [ -f "$t" ] || convert "$f" -thumbnail 200x200^ -gravity center -extent 200x200 "$t"
+  [ -f "$t" ] && [ ! "$f" -nt "$t" ] || convert "$f" -thumbnail 200x200^ -gravity center -extent 200x200 "$t"
   printf '%s\0icon\037%s\n' "${f##*/}" "$t"
 done | rofi -dmenu -i -p wallpaper -show-icons -theme-str "
   window { width: $(px 760); } listview { columns: 4; lines: 2; }
