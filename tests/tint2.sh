@@ -10,7 +10,7 @@ mkdir -p "$t/stub" "$t/home"
 printf '#!/bin/sh\necho "$@" >> "%s/notify.log"\n' "$t" > "$t/stub/notify-send"; chmod +x "$t/stub/notify-send"
 sed -e 's/{{s \([0-9]*\)}}/\1/g' -e 's/{{[a-z0-9]*}}/#888888/g' templates/tint2rc > "$t/tint2rc"
 Xvfb "$d" -screen 0 1280x800x24 >/dev/null 2>&1 & xp=$!; sleep 1
-DISPLAY=$d HOME="$t/home" PATH="$t/stub:$PATH" timeout 5 tint2 -c "$t/tint2rc" > "$t/err" 2>&1
+DISPLAY=$d HOME="$t/home" PATH="$t/stub:$PATH" timeout -k 1 5 tint2 -c "$t/tint2rc" > "$t/err" 2>&1
 fail=0
 grep -i 'invalid option' "$t/err" && fail=1
 [ -s "$t/notify.log" ] && { echo "battery warning with no battery: $(cat "$t/notify.log")"; fail=1; }

@@ -30,5 +30,11 @@ link "$PWD/config/asoundrc" ~/.asoundrc
 sudo ln -sfn "$PWD/bin/kindling-session" /usr/local/bin/kindling-session
 sudo cp session/kindling.desktop /usr/share/xsessions/
 
-[ -d ~/Pictures/Pape ] || echo "Put some wallpapers in ~/Pictures/Pape (or set KD_WALLDIR)."
+# kd-theme renders rc.xml/tint2rc from a wallpaper; without one login is a black screen, so seed a gradient
+walldir=${KD_WALLDIR:-$HOME/Pictures/Pape}
+mkdir -p "$walldir"
+for f in "$walldir"/*; do
+  case $f in *.[jJ][pP]*[gG]|*.[pP][nN][gG]|*.[wW][eE][bB][pP]) [ -f "$f" ] && wall=$f && break ;; esac
+done
+[ -n "$wall" ] || convert -size 1920x1080 gradient:'#1e1e2e-#89b4fa' "$walldir/default-gradient.png"
 echo "Done. Log out and pick the 'kindling' session."
